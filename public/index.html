@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Monitoring Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Health Monitoring Dashboard</h1>
+        </header>
+        <main>
+            <section class="data-section">
+                <div class="data-card">
+                    <h2>Heart Rate</h2>
+                    <div class="data-value" id="heartRate">-- BPM</div>
+                    <canvas id="heartRateChart"></canvas>
+                </div>
+                <div class="data-card">
+                    <h2>SpO2</h2>
+                    <div class="data-value" id="spo2">-- %</div>
+                    <canvas id="spo2Chart"></canvas>
+                </div>
+                <div class="data-card">
+                    <h2>Temperature</h2>
+                    <div class="data-value" id="temperature">-- °C</div>
+                    <canvas id="temperatureChart"></canvas>
+                </div>
+            </section>
+            <section class="settings-section">
+                <h2>Settings</h2>
+                <label for="interval">Update Interval (ms):</label>
+                <input type="number" id="interval" value="500" min="100">
+                <button id="applyInterval">Apply</button>
+            </section>
+        </main>
+        <footer>
+            <p>© 2024 Health Monitoring System</p>
+        </footer>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
