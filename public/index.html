@@ -1,83 +1,146 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Health Monitoring Dashboard</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Health Monitoring Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div class="dashboard-container">
+  <div class="dashboard-container">
 
-        <!-- Animated Header -->
-        <header class="dashboard-header">
-            <div class="header-content">
-                <h1><i class="fas fa-heartbeat"></i> Health Monitoring Dashboard</h1>
-                <div id="clock"></div>
+    <!-- Animated Header -->
+    <header class="dashboard-header">
+      <div class="header-content">
+        <h1><i class="fas fa-heartbeat"></i> Health Monitoring Dashboard</h1>
+        <div id="clock"></div>
+      </div>
+      <div class="header-background"></div> <!-- Parallax background -->
+    </header>
+
+    <main class="dashboard-content">
+      <section class="data-cards-section">
+        <div class="data-card heart-rate-card">
+          <i class="fas fa-heartbeat card-icon"></i>
+          <h2 class="card-title">Heart Rate</h2>
+          <div class="data-value" id="heartRate">-- BPM</div>
+          <div class="radial-progress heart-rate-progress" data-percentage="0">
+            <div class="circle">
+              <div class="mask full">
+                <div class="fill"></div>
+              </div>
+              <div class="mask half">
+                <div class="fill"></div>
+                <div class="fill fix"></div>
+              </div>
+              <div class="shadow"></div>
             </div>
-            <div class="header-background"></div> <!-- Parallax background -->
-        </header>
-
-        <main class="dashboard-content">
-            <section class="data-cards-section">
-                <div class="data-card heart-rate-card">
-                    <i class="fas fa-heartbeat card-icon"></i>
-                    <h2 class="card-title">Heart Rate</h2>
-                    <div class="data-value" id="heartRate">-- BPM</div>
-                    <canvas id="heartRateChart"></canvas>
-                </div>
-
-                <div class="data-card spo2-card">
-                    <i class="fas fa-lungs card-icon"></i>
-                    <h2 class="card-title">SpO2</h2>
-                    <div class="data-value" id="spo2">-- %</div>
-                    <canvas id="spo2Chart"></canvas>
-                </div>
-
-                <div class="data-card temperature-card">
-                    <i class="fas fa-thermometer-half card-icon"></i>
-                    <h2 class="card-title">Temperature</h2>
-                    <div class="data-value" id="temperature">-- °C</div>
-                    <canvas id="temperatureChart"></canvas>
-                </div>
-            </section>
-
-            <section class="settings-section">
-                <h2><i class="fas fa-cog"></i> Settings</h2>
-                <div class="setting-item">
-                    <label for="interval"><i class="fas fa-clock"></i> Update Interval (ms):</label>
-                    <input type="number" id="interval" value="500" min="100">
-                    <button id="applyInterval"><i class="fas fa-check"></i> Apply</button>
-                </div>
-                <div class="setting-item">
-                    <button id="themeToggle"><i class="fas fa-sun"></i> Toggle Theme</button>
-                </div>
-            </section>
-
-            <section class="alerts-section">
-                <h2><i class="fas fa-exclamation-triangle"></i> Alerts</h2>
-                <ul id="alerts-list"></ul>
-            </section>
-        </main>
-
-        <!-- Animated Footer -->
-        <footer class="dashboard-footer">
-            <div class="footer-content">
-                <p>© 2024 Health Monitoring System</p>
-                <div class="social-links">
-                    <a href="#" title="Facebook"><i class="fab fa-facebook"></i></a>
-                    <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
-                    <a href="#" title="GitHub"><i class="fab fa-github"></i></a>
-                </div>
+            <div class="inset">
+              <div class="percentage"></div>
             </div>
-            <div class="footer-background"></div>
-        </footer>
-    </div>
+          </div>
+        </div>
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="script.js"></script>
+        <div class="data-card spo2-card">
+          <i class="fas fa-lungs card-icon"></i>
+          <h2 class="card-title">SpO2</h2>
+          <div class="data-value" id="spo2">-- %</div>
+          <div class="radial-progress spo2-progress" data-percentage="0">
+            <div class="circle">
+              <div class="mask full">
+                <div class="fill"></div>
+              </div>
+              <div class="mask half">
+                <div class="fill"></div>
+                <div class="fill fix"></div>
+              </div>
+              <div class="shadow"></div>
+            </div>
+            <div class="inset">
+              <div class="percentage"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="data-card temperature-card">
+          <i class="fas fa-thermometer-half card-icon"></i>
+          <h2 class="card-title">Temperature</h2>
+          <div class="data-value" id="temperature">-- °C</div>
+          <div class="radial-progress temperature-progress" data-percentage="0">
+            <div class="circle">
+              <div class="mask full">
+                <div class="fill"></div>
+              </div>
+              <div class="mask half">
+                <div class="fill"></div>
+                <div class="fill fix"></div>
+              </div>
+              <div class="shadow"></div>
+            </div>
+            <div class="inset">
+              <div class="percentage"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Scrolling Chart Section -->
+      <section class="scrolling-chart-section">
+        <h2>Sensor Data Over Time</h2>
+        <canvas id="scrollingChrt"></canvas>
+      </section>
+
+      <section class="settings-section">
+        <h2><i class="fas fa-cog"></i> Settings</h2>
+        <div class="setting-item">
+          <label for="interval"><i class="fas fa-clock"></i> Update Interval (ms):</label>
+          <input type="number" id="interval" value="500" min="100">
+          <button id="applyInterval"><i class="fas fa-check"></i> Apply</button>
+        </div>
+
+        <div class="setting-item">
+            <label for="heartRateThreshold"><i class="fas fa-heartbeat"></i> Heart Rate Threshold:</label>
+            <input type="number" id="heartRateThreshold" value="100">
+        </div>
+        <div class="setting-item">
+            <label for="spo2Threshold"><i class="fas fa-lungs"></i> SpO2 Threshold:</label>
+            <input type="number" id="spo2Threshold" value="95">
+        </div>
+
+        <div class="setting-item">
+          <button id="themeToggle"><i class="fas fa-sun"></i> Toggle Theme</button>
+        </div>
+        <div class="setting-item">
+            <button id="exportData"><i class="fas fa-download"></i> Export Data (CSV)</button>
+        </div>
+      </section>
+
+      <section class="alerts-section">
+        <h2><i class="fas fa-exclamation-triangle"></i> Alerts</h2>
+        <ul id="alerts-list"></ul>
+        <button id="clearAlerts"><i class="fas fa-times"></i> Clear Alerts</button>
+      </section>
+    </main>
+
+    <!-- Animated Footer -->
+    <footer class="dashboard-footer">
+      <div class="footer-content">
+        <p>© 2024 Health Monitoring System</p>
+        <p>Designed by Aravindselvan</p>
+        <div class="social-links">
+          <a href="#" title="Facebook"><i class="fab fa-facebook"></i></a>
+          <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
+          <a href="#" title="GitHub"><i class="fab fa-github"></i></a>
+        </div>
+      </div>
+      <div class="footer-background"></div>
+    </footer>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
