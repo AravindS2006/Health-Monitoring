@@ -5,12 +5,11 @@ function updateClock() {
     document.getElementById('clock').textContent = time;
 }
 setInterval(updateClock, 1000);
-updateClock();
 
 // Theme Toggle
 const themeToggle = document.getElementById('themeToggle');
-const savedTheme = localStorage.getItem('theme') || 'light-theme'; // Default to light theme
-document.documentElement.className = savedTheme; // Set initial theme
+const savedTheme = localStorage.getItem('theme') || 'light-theme';
+document.documentElement.className = savedTheme;
 
 themeToggle.addEventListener('click', () => {
     const currentTheme = document.documentElement.className;
@@ -19,49 +18,63 @@ themeToggle.addEventListener('click', () => {
     localStorage.setItem('theme', newTheme);
 });
 
-// Chart Data
+// Data arrays for sparklines and centralized chart
 let heartRateData = [];
 let spo2Data = [];
 let temperatureData = [];
-const MAX_DATA_POINTS = 50; // Limit data points for scrolling effect
+const MAX_DATA_POINTS = 50;
 
-// Global variable for the scrolling chart
-let scrollingChart;
+// Initialize Chart.js for time series chart
+let timeSeriesChart;
 
-// Function to create chart
-function createChart(canvasId, label, color) {
-    const ctx = document.getElementById(canvasId).getContext('2d');
-    return new Chart(ctx, {
+// Initialize the chart after the DOM is fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+    const ctx = document.getElementById('timeSeriesChart').getContext('2d');
+    timeSeriesChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: [], // Use labels for timestamps if needed
-            datasets: [{
-                label: label,
-                data: [],
-                borderColor: color,
-                borderWidth: 2,
-                fill: false
-            }]
+            labels: [],
+            datasets: [
+                {
+                    label: 'Heart Rate (BPM)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    data: [],
+                    fill: false
+                },
+                {
+                    label: 'SpO2 (%)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    data: [],
+                    fill: false
+                },
+                {
+                    label: 'Temperature (°C)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    data: [],
+                    fill: false
+                }
+            ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
                 x: {
-                    display: false // Hide x-axis labels
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Time'
+                    }
                 },
                 y: {
-                    beginAtZero: true
+                    title: {
+                        display: true,
+                        text: 'Value'
+                    }
                 }
-            },
-            animation: false // Disable animation for scrolling effect
+            }
         }
     });
-}
-
-// Initialize the chart after the DOM is fully loaded
-document.addEventListener('DOMContentLoaded', () => {
-    scrollingChart = createChart('scrollingChart', 'Sensor Readings', 'rgba(75, 192, 192, 1)');
 });
 
 // Function to update radial progress
@@ -72,10 +85,9 @@ function updateRadialProgress(selector, value, maxValue) {
     const maskFullElement = progress.querySelector('.circle .mask.full');
 
     const percentage = Math.max(0, Math.min((value / maxValue) * 100, 100));
-    const rotation = Math.min(percentage * 3.6, 180); // 100% = 360deg, but we split it
+    const rotation = Math.min(percentage * 3.6, 180);
 
     percentageElement.textContent = Math.round(percentage) + '%';
-
     fillElement.style.transform = `rotate(${rotation}deg)`;
 
     if (percentage > 50) {
@@ -83,6 +95,71 @@ function updateRadialProgress(selector, value, maxValue) {
     } else {
         maskFullElement.classList.remove('active');
     }
+}
+
+// Function to update sparklines
+function updateSparkline(elementId, data) {
+    const element = document.getElementById(elementId);
+    element.innerHTML = ''; // Clear previous content
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('height', '100%');
+    svg.setAttribute('viewBox', `0 0 ${data.length} 100`);
+    svg.setAttribute('preserveAspectRatio', 'none');
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    let d = `M0 ${100 - data[0]} `;
+
+    for (let i = 1; i < data.length; i++) {
+        d += `L${i} ${100 - data[i]} `;
+    }
+
+    path.setAttribute('d', d);
+    path.setAttribute('stroke', 'currentColor');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-width', 1);
+    svg.appendChild(path);
+    element.appendChild(svg);
+}
+
+// Function to add new data point and limit array length
+function addDataPoint(dataArray, newDataPoint) {
+    dataArray.push(newDataPoint);
+    if (dataArray.length > MAX_DATA_POINTS) {
+        dataArray.shift();
+    }
+}
+
+// Function to update the central chart
+function updateCentralChart(heartRate, spo2, temperature) {
+  if (!timeSeriesChart) return;
+
+  const now = new Date();
+  const time = now.toLocaleTimeString();
+
+  // Push new data
+  addDataPoint(heartRateData, heartRate);
+  addDataPoint(spo2Data, spo2);
+  addDataPoint(temperatureData, temperature);
+
+  // Update labels and data for the chart
+  timeSeriesChart.data.labels.push(time);
+  if (timeSeriesChart.data.labels.length > MAX_DATA_POINTS) {
+      timeSeriesChart.data.labels.shift();
+  }
+
+  timeSeriesChart.data.datasets[0].data = [...heartRateData]; // Heart Rate
+  timeSeriesChart.data.datasets[1].data = [...spo2Data]; // SpO2
+  timeSeriesChart.data.datasets[2].data = [...temperatureData]; // Temperature
+
+  // Limit data points
+  timeSeriesChart.data.datasets.forEach((dataset) => {
+      if (dataset.data.length > MAX_DATA_POINTS) {
+          dataset.data.shift();
+      }
+  });
+
+  timeSeriesChart.update();
 }
 
 //Alert Thresholds
@@ -160,78 +237,48 @@ const socket = io();
 
 // Socket event listener for receiving sensor data
 socket.on('sensorData', (data) => {
-    // Update HTML elements with sensor data
-    document.getElementById('heartRate').textContent = data.heartRate + ' BPM';
-    document.getElementById('spo2').textContent = data.spo2 + ' %';
-    document.getElementById('temperature').textContent = data.temperature + ' °C';
+  // Update HTML elements with sensor data
+  document.getElementById('heartRate').textContent = data.heartRate + ' BPM';
+  document.getElementById('spo2').textContent = data.spo2 + ' %';
+  document.getElementById('temperature').textContent = data.temperature + ' °C';
 
-    // Update radial progress indicators
-    updateRadialProgress('.heart-rate-progress', data.heartRate, 180);
-    updateRadialProgress('.spo2-progress', data.spo2, 100);
-    updateRadialProgress('.temperature-progress', data.temperature, 45);
+  // Update radial progress indicators
+  updateRadialProgress('.heart-rate-progress', data.heartRate, 180);
+  updateRadialProgress('.spo2-progress', data.spo2, 100);
+  updateRadialProgress('.temperature-progress', data.temperature, 45);
 
-    // Update scrolling chart data
-    heartRateData.push(data.heartRate);
-    spo2Data.push(data.spo2);
-    temperatureData.push(data.temperature);
+  //Push data to the centralized chart
+  updateCentralChart(data.heartRate, data.spo2, data.temperature);
 
-    // Limit data points for scrolling effect
-    if (heartRateData.length > MAX_DATA_POINTS) {
-        heartRateData.shift();
-        spo2Data.shift();
-        temperatureData.shift();
-    }
+  // Add data points to the data arrays
+  addDataPoint(heartRateData, data.heartRate);
+  addDataPoint(spo2Data, data.spo2);
+  addDataPoint(temperatureData, data.temperature);
 
-    // Update chart labels (using timestamps if needed)
-    const timestamp = new Date().toLocaleTimeString();
-    scrollingChart.data.labels.push(timestamp);
-    if (scrollingChart.data.labels.length > MAX_DATA_POINTS) {
-        scrollingChart.data.labels.shift();
-    }
+  // Update sparklines
+  updateSparkline('heartRateSparkline', heartRateData);
+  updateSparkline('spo2Sparkline', spo2Data);
+  updateSparkline('temperatureSparkline', temperatureData);
 
-    // Update chart datasets
-    scrollingChart.data.datasets = [
-        {
-            label: 'Heart Rate (BPM)',
-            data: heartRateData,
-            borderColor: 'rgba(255, 99, 132, 1)',
-            fill: false
-        },
-        {
-            label: 'SpO2 (%)',
-            data: spo2Data,
-            borderColor: 'rgba(54, 162, 235, 1)',
-            fill: false
-        },
-        {
-            label: 'Temperature (°C)',
-            data: temperatureData,
-            borderColor: 'rgba(75, 192, 192, 1)',
-            fill: false
-        }
-    ];
-
-    scrollingChart.update();
-
-    //Check thresholds
-    if (data.heartRate > heartRateThreshold) {
+  //Check thresholds
+  if (data.heartRate > heartRateThreshold) {
       addAlert(`High Heart Rate: ${data.heartRate} BPM!`, 'high');
-    }
+  }
 
-    if (data.spo2 < spo2Threshold) {
+  if (data.spo2 < spo2Threshold) {
       addAlert(`Low SpO2: ${data.spo2}%!`, 'low');
-    }
+  }
 
-    //Store sensor data
-    sensorDataHistory.push(data);
+  //Store sensor data
+  sensorDataHistory.push(data);
 });
 
 //downloadCSV (data exporter):
 function downloadCSV(data) {
     const csvRows = [];
-    const headers = Object.keys(data[0]); // Assuming all objects have the same keys
+    const headers = Object.keys(data[0]);
 
-    csvRows.push(headers.join(',')); // Add header row
+    csvRows.push(headers.join(','));
 
     for (const row of data) {
         const values = headers.map(header => row[header]);

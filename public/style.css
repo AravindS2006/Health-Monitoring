@@ -76,12 +76,6 @@ body {
     100% { transform: scale(1.1) translateY(-20px); } /* Adjust distance */
 }
 
-/* Clock Style */
-#clock {
-    font-size: 1.2em;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-}
-
 /* Main Content */
 .dashboard-content {
     padding: 20px;
@@ -231,45 +225,35 @@ body {
     color: var(--text-color); /* Change text color */
 }
 
-/* Specific progress bar colors */
-.heart-rate-progress .circle .fill,
-.heart-rate-progress .circle .mask .fill {
-  background-color: #e74c3c; /* Red */
+/* Sparkline Styles */
+.sparkline {
+    width: 100%;
+    height: 30px; /* Adjust the height as needed */
+    margin-top: 5px;
 }
 
-.spo2-progress .circle .fill,
-.spo2-progress .circle .mask .fill {
-  background-color: #27ae60; /* Green */
+/* Centralized chart styles */
+.chart-section {
+    border: 1px solid #eee;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
 }
 
-.temperature-progress .circle .fill,
-.temperature-progress .circle .mask .fill {
-  background-color: #e67e22; /* Orange */
+.chart-section h2 {
+    font-size: 1.6em;
+    font-weight: 500;
+    color: var(--text-color);
+    margin-top: 0;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-/* Scrolling Chart Styles */
-.scrolling-chart-section {
-  border: 1px solid #eee;
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 30px;
-}
-
-.scrolling-chart-section h2 {
-  font-size: 1.6em;
-  font-weight: 500;
-  color: var(--text-color);
-  margin-top: 0;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* Chart Styles */
-canvas {
-    width: 100% !important;
-    height: auto !important;
+#timeSeriesChart {
+    width: 100%;
+    height: 300px; /* Adjust the height as needed */
 }
 
 /* Settings Section */
