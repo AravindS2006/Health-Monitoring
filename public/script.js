@@ -22,36 +22,39 @@ themeToggle.addEventListener('click', () => {
 let heartRateData = [];
 let spo2Data = [];
 let temperatureData = [];
-const MAX_DATA_POINTS = 50;
+const MAX_DATA_POINTS = 10; // Reduced for better bar chart visualization
 
 // Initialize Chart.js for time series chart
 let timeSeriesChart;
 
-// Initialize the chart after the DOM is fully loaded
-document.addEventListener('DOMContentLoaded', () => {
-    const ctx = document.getElementById('timeSeriesChart').getContext('2d');
-    timeSeriesChart = new Chart(ctx, {
-        type: 'line',
+// Function to create chart
+function createChart(canvasId) {
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    return new Chart(ctx, {
+        type: 'bar', // Changed to 'bar' chart
         data: {
             labels: [],
             datasets: [
                 {
                     label: 'Heart Rate (BPM)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.8)', // Slightly transparent
                     borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1,
                     data: [],
-                    fill: false
                 },
                 {
                     label: 'SpO2 (%)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.8)',
                     borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1,
                     data: [],
-                    fill: false
                 },
                 {
                     label: 'Temperature (°C)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.8)',
                     borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1,
                     data: [],
-                    fill: false
                 }
             ]
         },
@@ -67,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 },
                 y: {
+                    beginAtZero: true,
                     title: {
                         display: true,
                         text: 'Value'
@@ -75,6 +79,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+}
+
+// Initialize the chart after the DOM is fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+    timeSeriesChart = createChart('timeSeriesChart');
 });
 
 // Function to update radial progress
@@ -130,36 +139,37 @@ function addDataPoint(dataArray, newDataPoint) {
     }
 }
 
-// Function to update the central chart
+// Function to update the central chart (Bar Chart)
 function updateCentralChart(heartRate, spo2, temperature) {
-  if (!timeSeriesChart) return;
+    if (!timeSeriesChart) return;
 
-  const now = new Date();
-  const time = now.toLocaleTimeString();
+    const now = new Date();
+    const time = now.toLocaleTimeString();
 
-  // Push new data
-  addDataPoint(heartRateData, heartRate);
-  addDataPoint(spo2Data, spo2);
-  addDataPoint(temperatureData, temperature);
+    // Add new data points to the arrays
+    heartRateData.push(heartRate);
+    spo2Data.push(spo2);
+    temperatureData.push(temperature);
 
-  // Update labels and data for the chart
-  timeSeriesChart.data.labels.push(time);
-  if (timeSeriesChart.data.labels.length > MAX_DATA_POINTS) {
-      timeSeriesChart.data.labels.shift();
-  }
+    // Limit data points for better visualization
+    if (heartRateData.length > MAX_DATA_POINTS) {
+        heartRateData.shift();
+        spo2Data.shift();
+        temperatureData.shift();
+    }
 
-  timeSeriesChart.data.datasets[0].data = [...heartRateData]; // Heart Rate
-  timeSeriesChart.data.datasets[1].data = [...spo2Data]; // SpO2
-  timeSeriesChart.data.datasets[2].data = [...temperatureData]; // Temperature
+    // Update the chart labels (timestamps)
+    if (timeSeriesChart.data.labels.length > MAX_DATA_POINTS) {
+        timeSeriesChart.data.labels.shift(); // Remove oldest label
+    }
+    timeSeriesChart.data.labels.push(time); // Add new timestamp
 
-  // Limit data points
-  timeSeriesChart.data.datasets.forEach((dataset) => {
-      if (dataset.data.length > MAX_DATA_POINTS) {
-          dataset.data.shift();
-      }
-  });
+    // Update the chart datasets
+    timeSeriesChart.data.datasets[0].data = [...heartRateData]; // Heart Rate
+    timeSeriesChart.data.datasets[1].data = [...spo2Data]; // SpO2
+    timeSeriesChart.data.datasets[2].data = [...temperatureData]; // Temperature
 
-  timeSeriesChart.update();
+    timeSeriesChart.update();
 }
 
 //Alert Thresholds
