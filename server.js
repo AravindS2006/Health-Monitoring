@@ -19,13 +19,12 @@ const port = new SerialPort({
 const parser = port.pipe(new ReadlineParser({ delimiter: '\r\n' }));
 
 // Serve static files (HTML, CSS, JavaScript)
-app.use(express.static('public')); // Create a 'public' folder for your website files
+app.use(express.static('public'));
 
 // Route to serve the index.html file
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/public/index.html');
 });
-
 
 // WebSocket connection
 io.on('connection', (socket) => {
@@ -42,6 +41,13 @@ parser.on('data', (data) => {
   try {
     const sensorData = JSON.parse(data);
     console.log('Received data:', sensorData);
+
+    // Ensure all expected properties are present
+    if (sensorData.heartRate === undefined || sensorData.spo2 === undefined ||
+        sensorData.temperature === undefined || sensorData.ecg === undefined) {
+      console.warn("Missing sensor data property");
+      return; // Skip sending if data is incomplete
+    }
 
     // Send the data to all connected clients via WebSocket
     io.emit('sensorData', sensorData);
