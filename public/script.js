@@ -22,7 +22,7 @@ themeToggle.addEventListener('click', () => {
 let heartRateData = [];
 let spo2Data = [];
 let temperatureData = [];
-const MAX_DATA_POINTS = 10; // Reduced for better bar chart visualization
+const MAX_DATA_POINTS = 10;
 
 // Initialize Chart.js for time series chart
 let timeSeriesChart;
@@ -31,13 +31,13 @@ let timeSeriesChart;
 function createChart(canvasId) {
     const ctx = document.getElementById(canvasId).getContext('2d');
     return new Chart(ctx, {
-        type: 'bar', // Changed to 'bar' chart
+        type: 'bar',
         data: {
             labels: [],
             datasets: [
                 {
                     label: 'Heart Rate (BPM)',
-                    backgroundColor: 'rgba(255, 99, 132, 0.8)', // Slightly transparent
+                    backgroundColor: 'rgba(255, 99, 132, 0.8)',
                     borderColor: 'rgba(255, 99, 132, 1)',
                     borderWidth: 1,
                     data: [],
@@ -140,7 +140,7 @@ function addDataPoint(dataArray, newDataPoint) {
 }
 
 // Function to update the central chart (Bar Chart)
-function updateCentralChart(heartRate, spo2, temperature) {
+function updateCentralChart(heartRate, spo2, dht12_temp) {
     if (!timeSeriesChart) return;
 
     const now = new Date();
@@ -149,7 +149,7 @@ function updateCentralChart(heartRate, spo2, temperature) {
     // Add new data points to the arrays
     heartRateData.push(heartRate);
     spo2Data.push(spo2);
-    temperatureData.push(temperature);
+    temperatureData.push(dht12_temp);
 
     // Limit data points for better visualization
     if (heartRateData.length > MAX_DATA_POINTS) {
@@ -212,7 +212,7 @@ heartRateThresholdInput.addEventListener('change', function() {
 
 spo2ThresholdInput.addEventListener('change', function() {
   spo2Threshold = this.value;
-  localStorage.setItem('spo2Threshold', spo2Threshold);
+  localStorage.setItem('spo2Threshold', heartRateThreshold);
 });
 
 // Function to add alert
@@ -242,46 +242,54 @@ document.getElementById('exportData').addEventListener('click', () => {
 //Global array to store sensor data
 const sensorDataHistory = [];
 
-//Socket
-const socket = io();
+//Function to get random Number:
+function getRandomNumber(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 
-// Socket event listener for receiving sensor data
-socket.on('sensorData', (data) => {
-  // Update HTML elements with sensor data
-  document.getElementById('heartRate').textContent = data.heartRate + ' BPM';
-  document.getElementById('spo2').textContent = data.spo2 + ' %';
-  document.getElementById('temperature').textContent = data.temperature + ' °C';
+//Tell the DOM
+function updateDisplay() {
+   // Generate random values within specified ranges
+    const heartRate = getRandomNumber(70, 90);
+    const spo2 = getRandomNumber(95, 100);
+    const dht12_temp = getRandomNumber(35, 37);
 
-  // Update radial progress indicators
-  updateRadialProgress('.heart-rate-progress', data.heartRate, 180);
-  updateRadialProgress('.spo2-progress', data.spo2, 100);
-  updateRadialProgress('.temperature-progress', data.temperature, 45);
+    // Update HTML elements with generated values
+    document.getElementById('heartRate').textContent = `${heartRate} BPM`;
+    document.getElementById('spo2').textContent = `${spo2} %`;
+    document.getElementById('temperature').textContent = `${dht12_temp} °C`;
 
-  //Push data to the centralized chart
-  updateCentralChart(data.heartRate, data.spo2, data.temperature);
+    //Push data to the centralized chart
+    updateCentralChart(heartRate, spo2, dht12_temp);
 
-  // Add data points to the data arrays
-  addDataPoint(heartRateData, data.heartRate);
-  addDataPoint(spo2Data, data.spo2);
-  addDataPoint(temperatureData, data.temperature);
+    // Add data points to the data arrays
+    addDataPoint(heartRateData, heartRate);
+    addDataPoint(spo2Data, spo2);
+    addDataPoint(temperatureData, dht12_temp);
 
-  // Update sparklines
-  updateSparkline('heartRateSparkline', heartRateData);
-  updateSparkline('spo2Sparkline', spo2Data);
-  updateSparkline('temperatureSparkline', temperatureData);
+    // Update sparklines
+    updateSparkline('heartRateSparkline', heartRateData);
+    updateSparkline('spo2Sparkline', spo2Data);
+    updateSparkline('temperatureSparkline', temperatureData);
 
-  //Check thresholds
-  if (data.heartRate > heartRateThreshold) {
-      addAlert(`High Heart Rate: ${data.heartRate} BPM!`, 'high');
-  }
+    //Check thresholds (using the dummy values!)
+    if (heartRate > heartRateThreshold) {
+        addAlert(`High Heart Rate: ${heartRate} BPM!`, 'high');
+    }
 
-  if (data.spo2 < spo2Threshold) {
-      addAlert(`Low SpO2: ${data.spo2}%!`, 'low');
-  }
+    if (spo2 < spo2Threshold) {
+        addAlert(`Low SpO2: ${spo2}%!`, 'low');
+    }
 
-  //Store sensor data
-  sensorDataHistory.push(data);
-});
+    //Store sensor data (Store the dummy values!)
+    sensorDataHistory.push({ heartRate, spo2, dht12_temp });
+}
+
+//Initial display
+updateDisplay();
+
+//Setup Interval
+setInterval(updateDisplay, 2000);
 
 //downloadCSV (data exporter):
 function downloadCSV(data) {
@@ -308,3 +316,23 @@ function downloadCSV(data) {
     document.body.removeChild(a);
     URL.revokeObjectURL(url); // Clean up
 }
+
+//Socket
+const socket = io();
+
+//Override socket
+
+//Removing what is not needed
+socket.on("connect", () => {
+  console.log(`connect ${socket.id}`);
+});
+
+//Removing what is not needed
+socket.on("connect_error", (err) => {
+  console.log(`connect_error due to ${err.message}`);
+});
+
+//Override socket
+socket.on('sensorData', (data) => {
+  //Do nothing.
+});
